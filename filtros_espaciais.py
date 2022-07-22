@@ -93,14 +93,16 @@ def rgb2gray(img):
 # Função para criar ruídos distintos em imagens
 # os ruídos utilizados são o Gaussiano e o Salt and Peper (Impulsivo)
 def noisy(noise_typ,image):
+    image = image.astype(int)
     if noise_typ == "gauss":
         row, col = image.shape
         mean = 0
-        var = 0.1
+        var = 500
         sigma = var**0.5
         gauss = np.random.normal(mean, sigma, size=(row,col))
         gauss = gauss.reshape(row, col)
         noisy = image + gauss
+        noisy -= noisy.min() 
         return noisy
     elif noise_typ == "s&p":
         row,col = image.shape
@@ -127,9 +129,9 @@ s = 3
 w = np.ones([s, s])
 
 imagesStrings = [
-    {"name": "cameraman.tiff", "hasColor": False},
-    {"name": "coruja.jpg", "hasColor": True},
-    {"name": "paisagem.jpg", "hasColor": True}
+    {"name": "cameraman.tiff", "hasColor": False}
+    # {"name": "coruja.jpg", "hasColor": True}
+    # {"name": "paisagem.jpg", "hasColor": True}
 ]
 
 noises = [
@@ -150,6 +152,8 @@ for image in imagesStrings:
     if(image["hasColor"]):
         img = rgb2gray(img)
     
+    print("tipo: ", img.dtype)
+
     for i in range(0, len(noises)):
         rows = len(noises)
         cols = len(filters) + 1
