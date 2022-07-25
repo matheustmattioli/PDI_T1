@@ -3,9 +3,11 @@
 # Feito pelos alunos:
 #   - Lucas Machado Cid          - RA: 769841
 #   - Matheus Teixeira Mattioli  - RA: 769783
+from calendar import c
 from unicodedata import name
 import numpy as np 
 import matplotlib.pyplot as plt
+import scipy.signal
 
 # Função para realizar filtragem dos pixels de uma imagem
 # através da média geometrica dos pixels de uma vizinhança.
@@ -84,6 +86,31 @@ def median(img, w):
             
     return img_filtered
     
+# Função gaussiana em duas dimensões
+# Retirado do notebook "suavização" da aula 
+# da semana 3.
+# Retorna um filtro gaussiano w 
+def do_gaussian_filter_2d(filter_size):
+    sigma = filter_size/6.
+    x_vals = np.linspace(-3*sigma, 3*sigma, filter_size)
+    y_vals = x_vals.copy()
+    z = np.zeros((filter_size, filter_size))
+    for row in range(filter_size):
+        x = x_vals[row]
+        for col in range(filter_size):
+            y = y_vals[col]
+            z[row, col] = np.exp(-(x**2+y**2)/(2*sigma**2))
+    z = z/np.sum(z)
+
+    return z
+
+# Função para gerar um filtro gaussiano e aplicá-lo
+# em uma imagem através da biblioteca scipy.signal
+def gaussian_filter(img, w):
+    w = do_gaussian_filter_2d(13)
+    img_filtered = scipy.signal.convolve(img, w, mode='same')
+    return img_filtered
+
 # Função passada pelo Professor para retirar os canais de cores de uma imagem colorida,
 # transformando em escala de cinza.
 def rgb2gray(img):
@@ -105,7 +132,7 @@ def noisy(noise_typ,image):
         noisy -= noisy.min() 
         return noisy
     elif noise_typ == "s&p":
-        row,col = image.shape
+        rows,cols = image.shape
         s_vs_p = 0.5
         amount = 0.004
         out = np.copy(image)
@@ -114,13 +141,14 @@ def noisy(noise_typ,image):
         num_salt = np.ceil(amount * image.size * s_vs_p)
         coords = [np.random.randint(0, i - 1, int(num_salt))
                 for i in image.shape]
-        out[coords] = 1
+        out[coords[0], coords[1]] = 1
 
         # Pepper mode
         num_pepper = np.ceil(amount* image.size * (1. - s_vs_p))
         coords = [np.random.randint(0, i - 1, int(num_pepper))
                 for i in image.shape]
-        out[coords] = 0
+        
+        out[coords[0], coords[1]] = 0
 
         return out
 
@@ -141,7 +169,8 @@ noises = [
 
 filters = [
     geometricMean,
-    median
+    median,
+    gaussian_filter
 ]
 
 for image in imagesStrings:
@@ -152,7 +181,7 @@ for image in imagesStrings:
     if(image["hasColor"]):
         img = rgb2gray(img)
     
-    print("tipo: ", img.dtype)
+    # print("tipo: ", img.dtype)
 
     for i in range(0, len(noises)):
         rows = len(noises)
