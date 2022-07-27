@@ -107,7 +107,7 @@ def do_gaussian_filter_2d(filter_size):
 # Função para gerar um filtro gaussiano e aplicá-lo
 # em uma imagem através da biblioteca scipy.signal
 def gaussian_filter(img, w):
-    w = do_gaussian_filter_2d(13)
+    w = do_gaussian_filter_2d(10)
     img_filtered = scipy.signal.convolve(img, w, mode='same')
     return img_filtered
 
@@ -124,7 +124,7 @@ def noisy(noise_typ,image):
     if noise_typ == "gauss":
         row, col = image.shape
         mean = 0
-        var = 500
+        var = 400
         sigma = var**0.5
         gauss = np.random.normal(mean, sigma, size=(row,col))
         gauss = gauss.reshape(row, col)
@@ -157,9 +157,12 @@ s = 3
 w = np.ones([s, s])
 
 imagesStrings = [
-    {"name": "cameraman.tiff", "hasColor": False}
-    # {"name": "coruja.jpg", "hasColor": True}
-    # {"name": "paisagem.jpg", "hasColor": True}
+    {"name": "cameraman.tiff", "hasColor": False},
+    {"name": "coruja.jpg", "hasColor": True},
+    {"name": "paisagem.jpg", "hasColor": True},
+    {"name": "flower.jpg", "hasColor": True},
+    {"name": "pacman.jpg", "hasColor": True},
+    {"name": "amongus.jpg", "hasColor": True}
 ]
 
 noises = [
@@ -168,19 +171,19 @@ noises = [
 ]
 
 filters = [
-    geometricMean,
-    median,
-    gaussian_filter
+    {"name": "Media Geometrica", "function": geometricMean},
+    {"name": "Mediana", "function": median},
+    {"name": "Gaussiana", "function": gaussian_filter}
 ]
 
 for image in imagesStrings:
     plt.figure(figsize=[15,15])
     img = plt.imread(image["name"])
-    file_img_name = ".\\filtered_images\\" + "filter_" + image["name"].split(".")[0] + ".png"
-
+    file_img_name = ".\\filtered_images\\" + "filter_" + image["name"].split(".")[0] + ".jpg"
+    
     if(image["hasColor"]):
         img = rgb2gray(img)
-    
+
     # print("tipo: ", img.dtype)
 
     for i in range(0, len(noises)):
@@ -188,11 +191,14 @@ for image in imagesStrings:
         cols = len(filters) + 1
         img_noised = noisy(noises[i], img)
         plt.subplot(rows, cols, (i * cols) + 1)
+        plt.title("Noise: " + str(noises[i]))
+        
         plt.imshow(img_noised, cmap='gray')
         for j in range(0, len(filters)):
             col = j+2
             plt.subplot(rows, cols, (i * cols) + 2 + j)
-            img_smoothed = filters[j](img_noised, w)
+            img_smoothed = filters[j]["function"](img_noised, w)
+            plt.title("Filtro: " + str(filters[j]["name"]))
             plt.imshow(img_smoothed, cmap='gray')
     plt.savefig(file_img_name)
 
